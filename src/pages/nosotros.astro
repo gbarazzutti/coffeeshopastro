@@ -1,10 +1,34 @@
 ---
-  import Layout from "../layouts/Layout.astro"
+  import { Picture } from "astro:assets"
+  import Layout from "@/layouts/Layout.astro"
+  import { BaseWPSchema } from "@/types"
+
+  const url = `${import.meta.env.API_URL}/pages?slug=nosotros`
+  const res = await fetch(url) 
+  const json = await res.json()
+  console.log(json[0]);
+  const data = BaseWPSchema.parse(json[0])
+  console.log(data);
 ---
 
   <Layout
-    title="Nosotros"
+    title={data.title.rendered}
+    subtitle={data.acf.subtitle}
+    bgImage={data.featured_images.full.url}
   >
-    <h1>Nosotros</h1>
-    <p>Texto de Nosotros</p>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+      <Picture
+        src={data.featured_images.medium_large.url}
+        alt={`Imagen de ${data.title.rendered}`}
+        width={data.featured_images.medium_large.width}
+        height={data.featured_images.medium_large.height}
+        formats={['avif', 'webp']}
+      />
+
+      <div class="text-xl space-y-3 mt-10 lg:mt-0" set:html={data.content.rendered}></div>
+
+
+    </div>
+    
   </Layout>
