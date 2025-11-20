@@ -1,0 +1,40 @@
+---
+// Si aqui ponemos "export const prerender = false" podemos utilizamos SSR y el sitio se vuelve dinámico.
+// Si el sitio es dinámico (SSR) necesitamos que el Backend de Wordpress esté desplegado en un servidor. 
+// En cambio si usamos SSG, podemos tener el backend en local y el frontend en netlify, y cada vez que agredamos algo, volvemos a compilar
+// La funcion se ejecuta automaticamente
+import Postcard from '@/components/blog/PostCard.astro'
+import Layout from '@/layouts/Layout.astro'
+import { PostsSchema } from '@/types'
+import { CategoriesSlugSchema, CategorySchema} from '@/types'
+
+export async function getStaticPaths(){
+    const res = await fetch(`${import.meta.env.API_URL}/categories?_fields=slug`)
+    const json = await res.json()
+    const categories = CategoriesSlugSchema.parse(json)
+    return categories.map(category => ({
+        params: { slug: category.slug }
+    }))
+}
+
+
+const { slug } = Astro.params // Nos dice en que categoria estamos
+console.log(slug)
+const catUrl = `${import.meta.env.API_URL}/categories?slug=${slug}`
+const catRes = await fetch(catUrl)
+const catJson = await catRes.json()
+const category = CategorySchema.parse(catJson[0])
+
+const postsUrl = `${import.meta.env.API_URL}/posts?categories=${category.id}`
+const postsRes = await fetch(postsUrl)
+const postsJson = await postsRes.json()
+const posts = PostsSchema.parse(postsJson)
+---
+<!-- En bgImage usamos bgImage={posts[0].featured_images.full.url} para que la imagen destacada del ultimo post sea la imagen destacada de la caregoría. Las categorías no tienen imagenes destacadas por defecto. Pero si quisieramos una imagen destacada fija para cada categoria, podríamos agregar el campo con ACF en Ajustes->Taxonomía->Categorías -->
+<Layout 
+    title={`Posts en la categoría: ${category.name}`}
+    subtitle={`Posts en la categoría: ${category.name}`}
+    bgImage={posts[0].featured_images.full.url} 
+>
+    {posts.map(post=> <Postcard post={post} /> )}
+</Layout>

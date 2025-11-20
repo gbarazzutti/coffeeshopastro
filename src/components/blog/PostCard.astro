@@ -20,7 +20,7 @@ const { post } = Astro.props
             <PostMeta date={post.date} />
 
         </p>
-        {post.category_details.map(cat => <PostCategories name={cat.name} />)}
+        {post.category_details.map(cat => <PostCategories name={cat.name} slug={cat.slug} />)}
 
         <div set:html={post.content.rendered} class="line-clamp-2 text-lg"></div>
     </div>
